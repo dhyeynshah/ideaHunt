@@ -1,116 +1,92 @@
 import NextAuth from 'next-auth'
+import CredentialsProvider from 'next-auth/providers/credentials'
 import { supabase } from './supabase'
 
 export const authConfig = {
   providers: [
-    {
-      id: 'slack',
-      name: 'Slack',
-      type: 'oauth',
-      client: {
-        token_endpoint_auth_method: 'client_secret_post'
+    CredentialsProvider({
+      name: 'Email',
+      credentials: {
+        email: { label: 'Email', type: 'email' },
+        password: { label: 'Password', type: 'password' }
       },
-      authorization: {
-        url: 'https://slack.com/oauth/v2/authorize',
-        params: {
-          // Use the exact scopes you have configured
-          user_scope: 'openid profile email'
+      async authorize(credentials) {
+        if (!credentials?.email || !credentials?.password) {
+          return null
         }
-      },
-      token: 'https://slack.com/api/oauth.v2.access',
-      userinfo: {
-        url: 'https://slack.com/api/openid.connect.userInfo',
-        async request({ tokens }) {
-          const response = await fetch('https://slack.com/api/openid.connect.userInfo', {
-            headers: {
-              Authorization: `Bearer ${tokens.access_token}`,
-            },
-          })
-          const data = await response.json()
-          console.log('Slack userinfo response:', data) // Debug log
-          return data
-        }
-      },
-      clientId: process.env.SLACK_CLIENT_ID,
-      clientSecret: process.env.SLACK_CLIENT_SECRET,
-      profile(profile) {
-        console.log('Slack profile data:', profile) // Debug log
-        return {
-          id: profile.sub,
-          name: profile.name,
-          email: profile.email,
-          image: profile.picture,
-          slackId: profile.sub
-        }
-      }
-    }
-  ],
-  callbacks: {
-    async signIn({ user, account, profile }) {
-      console.log('SignIn callback - user:', user, 'account:', account) // Debug log
-      
-      if (account.provider === 'slack') {
+
         try {
-          // Check if user exists in Supabase
-          const { data: existingUser, error } = await supabase
-            .from('users')
-            .select('*')
-            .eq('slack_id', user.slackId)
-            .single()
+          // Sign in with Supabase
+          const { data, error } = await supabase.auth.signInWithPassword({
+            email: credentials.email,
+            password: credentials.password,
+          })
 
-          if (error && error.code !== 'PGRST116') {
-            console.error('Error checking user:', error)
-            return false
+          if (error) {
+            console.error('Auth error:', error)
+            return null
           }
 
-          if (!existingUser) {
-            // Create new user
-            const { error: insertError } = await supabase
-              .from('users')
-              .insert([{
-                slack_id: user.slackId,
-                username: user.name?.replace(/\s+/g, '').toLowerCase() || `user${Date.now()}`,
-                display_name: user.name,
-                email: user.email,
-                avatar_url: user.image
-              }])
-
-            if (insertError) {
-              console.error('Error creating user:', insertError)
-              return false
-            }
-          } else {
-            // Update existing user info
-            const { error: updateError } = await supabase
-              .from('users')
-              .update({
-                display_name: user.name,
-                email: user.email,
-                avatar_url: user.image,
-                updated_at: new Date().toISOString()
-              })
-              .eq('slack_id', user.slackId)
-
-            if (updateError) {
-              console.error('Error updating user:', updateError)
+          if (data.user) {
+            return {
+              id: data.user.id,
+              email: data.user.email,
+              name: data.user.user_metadata?.full_name || data.user.email,
             }
           }
 
-          return true
+          return null
         } catch (error) {
           console.error('Sign in error:', error)
-          return false
+          return null
         }
       }
-      return true
+    })
+  ],
+  callbacks: {
+    async signIn({ user }) {
+      try {
+        // Check if user exists in our users table
+        const { data: existingUser, error } = await supabase
+          .from('users')
+          .select('*')
+          .eq('email', user.email)
+          .single()
+
+        if (error && error.code !== 'PGRST116') {
+          console.error('Error checking user:', error)
+          return false
+        }
+
+        if (!existingUser) {
+          // Create new user in our users table
+          const { error: insertError } = await supabase
+            .from('users')
+            .insert([{
+              email: user.email,
+              username: user.email.split('@')[0].toLowerCase() || `user${Date.now()}`,
+              display_name: user.name,
+            }])
+
+          if (insertError) {
+            console.error('Error creating user:', insertError)
+            return false
+          }
+        }
+
+        return true
+      } catch (error) {
+        console.error('Sign in error:', error)
+        return false
+      }
     },
-    async jwt({ token, user, account }) {
-      if (account && user) {
-        // Get user data from Supabase
+    async jwt({ token, user }) {
+      if (user) {
+        // Get user data from our users table
         const { data: userData } = await supabase
           .from('users')
           .select('*')
-          .eq('slack_id', user.slackId)
+          .eq('email', user.email)
           .single()
 
         token.userData = userData
@@ -128,8 +104,7 @@ export const authConfig = {
   },
   session: {
     strategy: 'jwt'
-  },
-  debug: true // Add this for debugging
+  }
 }
 
 export default NextAuth(authConfig)
