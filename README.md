@@ -1,36 +1,11 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
+# Idea Hunt
 
-## Getting Started
+Where anyone can post product ideas and developers can find their next build, inspired by r/sideproject and Hack Club.
 
-First, run the development server:
+## About
+I'm currently working on developing this in Figma and exploring Airtable integration (since that's what Hack Club uses). The plan is to create a platform where:
+1. Developers can post their ideas to gauge interest before building
+2. Non-technical folks can find developers to collaborate with on their concepts
+3. Ideas get visibility without requiring technical skills to present them
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
-
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
-
-You can start editing the page by modifying `app/page.js`. The page auto-updates as you edit the file.
-
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
-
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+This was inspired by Hack Club's YSWS (You Ship We Ship) initiative. With IdeaHunt, Hack Club users can post project ideas while maintaining privacy. Only Hack Club members will see who's signed up for specific projects. This creates a more sustainable way to gauge interest in ideas while respecting privacy concerns.
