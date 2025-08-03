@@ -7,6 +7,9 @@ export const authConfig = {
       id: 'slack',
       name: 'Slack',
       type: 'oauth',
+      client: {
+        token_endpoint_auth_method: 'client_secret_post'
+      },
       authorization: {
         url: 'https://slack.com/oauth/v2/authorize',
         params: {
