@@ -10,8 +10,7 @@ export const authConfig = {
       authorization: {
         url: 'https://slack.com/oauth/v2/authorize',
         params: {
-          scope: 'openid profile email',
-          user_scope: 'openid profile email'
+          user_scope: 'openid,profile,email'
         }
       },
       token: 'https://slack.com/api/oauth.v2.access',
