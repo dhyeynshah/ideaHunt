@@ -13,7 +13,8 @@ export const authConfig = {
       authorization: {
         url: 'https://slack.com/oauth/v2/authorize',
         params: {
-          user_scope: 'openid,profile,email'
+          // Use the exact scopes you have configured
+          user_scope: 'openid profile email'
         }
       },
       token: 'https://slack.com/api/oauth.v2.access',
@@ -25,12 +26,15 @@ export const authConfig = {
               Authorization: `Bearer ${tokens.access_token}`,
             },
           })
-          return await response.json()
+          const data = await response.json()
+          console.log('Slack userinfo response:', data) // Debug log
+          return data
         }
       },
       clientId: process.env.SLACK_CLIENT_ID,
       clientSecret: process.env.SLACK_CLIENT_SECRET,
       profile(profile) {
+        console.log('Slack profile data:', profile) // Debug log
         return {
           id: profile.sub,
           name: profile.name,
@@ -43,6 +47,8 @@ export const authConfig = {
   ],
   callbacks: {
     async signIn({ user, account, profile }) {
+      console.log('SignIn callback - user:', user, 'account:', account) // Debug log
+      
       if (account.provider === 'slack') {
         try {
           // Check if user exists in Supabase
@@ -122,7 +128,8 @@ export const authConfig = {
   },
   session: {
     strategy: 'jwt'
-  }
+  },
+  debug: true // Add this for debugging
 }
 
 export default NextAuth(authConfig)
